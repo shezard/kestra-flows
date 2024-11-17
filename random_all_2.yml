@@ -1,0 +1,27 @@
+id: random_all_2
+namespace: home.shezard
+tasks:
+  - id: for_each
+    type: io.kestra.plugin.core.flow.ForEach
+    values: '["AAA","BBB", "CCC", "DDD", "EEE", "FFF"]'
+    concurrencyLimit: 5
+    tasks:
+      - id: for_one
+        type: io.kestra.plugin.core.flow.Subflow
+        flowId: random_failure_2
+        namespace: home.shezard
+        transmitFailed: false
+        inputs:
+          iata: "{{ taskrun.value }}"
+
+  - id: get_all_failure_store
+    type: io.kestra.plugin.core.flow.ForEach
+    values: '["AAA","BBB", "CCC", "DDD", "EEE", "FFF"]'
+    concurrencyLimit: 5
+    tasks:
+      - id: check_one_failure
+        type: io.kestra.plugin.core.flow.Subflow
+        flowId: check_failure
+        namespace: home.shezard
+        inputs:
+          iata: "{{ taskrun.value }}"

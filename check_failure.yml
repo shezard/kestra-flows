@@ -1,0 +1,20 @@
+inputs:
+  - id: iata
+    type: STRING
+    defaults: biq
+
+id: check_failure
+namespace: home.shezard
+tasks:
+  - id: get_store_failure
+    type: io.kestra.plugin.core.kv.Get
+    key: "{{ inputs.iata }}"
+    namespace: home
+
+  - id: check_error_count
+    type: io.kestra.plugin.scripts.python.Script
+    script: |
+      import sys
+      error_count = {{ outputs.get_store_failure.value ?? 0 }}
+      if error_count > 3:
+        sys.exit(error_count)

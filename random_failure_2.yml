@@ -1,0 +1,47 @@
+inputs:
+  - id: iata
+    type: STRING
+    defaults: biq
+
+id: random_failure_2
+namespace: home.shezard
+tasks:
+  - id: fail_randomly
+    type: io.kestra.plugin.scripts.python.Script
+    script: |
+      import sys, random
+      sys.exit(random.randint(0, 1))
+
+  - id: set_kv_success
+    type: io.kestra.plugin.core.kv.Set
+    key: "{{ inputs.iata }}"
+    value: "0"
+    namespace: home
+    overwrite: true
+
+errors:
+  - id: get_store_failure
+    type: io.kestra.plugin.core.kv.Get
+    key: "{{ inputs.iata }}"
+    namespace: home
+
+  - id: update_store_failure
+    type: io.kestra.plugin.scripts.python.Script
+    script: |
+      import json
+      from kestra import Kestra
+
+      failure_count = {{ outputs.get_store_failure.value ?? 0 }}
+      try:
+        failure_count = failure_count + 1
+      except KeyError:
+        failure_count = 1
+
+      Kestra.outputs({"data": failure_count})
+
+  - id: set_kv_failure
+    type: io.kestra.plugin.core.kv.Set
+    key: "{{ inputs.iata }}"
+    value: "{{ outputs.update_store_failure.vars.data }}"
+    namespace: home
+    overwrite: true
