@@ -1,0 +1,15 @@
+id: random_all
+namespace: home.shezard
+tasks:
+  - id: for_each
+    type: io.kestra.plugin.core.flow.ForEach
+    values: '["AAA","BBB", "CCC", "DDD", "EEE", "FFF"]'
+    concurrencyLimit: 5
+    tasks:
+      - id: for_one
+        type: io.kestra.plugin.core.flow.Subflow
+        flowId: random_failure
+        namespace: home.shezard
+        transmitFailed: false
+        inputs:
+          iata: "{{ taskrun.value }}"

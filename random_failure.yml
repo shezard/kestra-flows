@@ -12,8 +12,26 @@ tasks:
       import sys, random
       sys.exit(random.randint(0, 1))
 
+  - id: update_store_success
+    type: io.kestra.plugin.scripts.python.Script
+    script: |
+      import json
+      from kestra import Kestra
+
+      failure_store = json.loads('{{ kv('failure_store', 'home') }}')
+      failure_store['{{ inputs.iata }}'] = 0
+
+      Kestra.outputs({"data": json.dumps(failure_store)})
+
+  - id: set_kv_success
+    type: io.kestra.plugin.core.kv.Set
+    key: failure_store
+    value: "{{ outputs.update_store_success.vars.data }}"
+    namespace: home
+    overwrite: true
+
 errors:
-  - id: transform_store
+  - id: update_store_failure
     type: io.kestra.plugin.scripts.python.Script
     script: |
       import json
@@ -27,9 +45,9 @@ errors:
 
       Kestra.outputs({"data": json.dumps(failure_store)})
 
-  - id: set_kv
+  - id: set_kv_failure
     type: io.kestra.plugin.core.kv.Set
     key: failure_store
-    value: "{{ outputs.transform_store.vars.data }}"
+    value: "{{ outputs.update_store_failure.vars.data }}"
     namespace: home
     overwrite: true
